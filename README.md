@@ -1,2 +1,2 @@
-# qrobot.github.io
+# http://qrobot.github.io
 Ponto de acesso
