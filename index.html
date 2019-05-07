@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <title>Qrobot - Ponto de acesso</title>
+    <!-- Bootstrap -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.css" rel="stylesheet">
+	<script type="text/javascript" src="https://wilmariano.github.io/qrcode.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.3.3/adapter.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.min.js"></script>
+    <script type="text/javascript" src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>	
+  </head>
+  <body>
+    <!-- inicio Modal 01-->
+    <div class="modal fade" id="myModalqrcode" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Qrcode Gerado:</h4>
+          </div>
+          <div class="modal-body">
+    <center><div id="qrcode"></div></center>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- fim Modal 01-->
+
+    <!-- inicio Modal 02-->
+    <div class="modal fade" id="myModalcamera" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Leitor de Qrcode:</h4>
+          </div>
+          <div class="modal-body">
+          <div class="preview-container">
+            <center><video style="width:100%;" id="preview"></video></center>
+          </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- fim Modal 01-->
+
+    <div class='container'>
+			<section id="wizard">
+			  <div class="page-header"></div>
+				<div id="rootwizard">
+					<div class="navbar">
+					  <div class="navbar-inner">
+					    <div class="container">
+      					<ul>
+      					  <li><a href="#tab1" data-toggle="tab">Primeiro Passo</a></li>
+      						<li><a href="#tab2" data-toggle="tab">Segundo Passo</a></li>
+      						<li><a href="#tab3" data-toggle="tab">Terceiro e Ultimo Passo</a></li>
+      					</ul>
+					     </div>
+					  </div>
+					</div>
+					<div class="tab-content">
+						<div class="tab-pane" id="tab1">
+              <div class="jumbotron">
+                <p>Para gerar um Qrcode: Vá ao segundo passo</p>
+                <p>Para ler um Qrcode: Vá ao terceiro passo</p>  
+              	<div style="float:right">
+              		<input type='button' class='btn button-next' name='proximo' value='Próximo' />
+              		<input type='button' class='btn button-last' name='ultimo' value='Último' />
+              	</div>
+              	<div style="float:left">
+              		<input type='button' class='btn button-first' name='primeiro' value='Primeiro' />
+              		<input type='button' class='btn button-previous' name='anterior' value='Anterior' />
+              	</div>
+              </div>
+            </div>						
+            <div class="tab-pane" id="tab2">
+              <div class="jumbotron">
+                <label>Link a transformar em Qrcode:</label>
+              	<input type="text" class="form-control" id="valor" value="" style="margin-bottom:2%;" />		
+                <p><a class="btn btn-primary btn-lg btn-block" href="#" role="button" onClick="createQrCode()" data-toggle="modal" data-target="#myModalqrcode">Gerar QrCode</a></p>
+              	<div style="float:right">
+              		<input type='button' class='btn button-next' name='proximo' value='Próximo' />
+              		<input type='button' class='btn button-last' name='ultimo' value='Último' />
+              	</div>
+              	<div style="float:left">
+              		<input type='button' class='btn button-first' name='primeiro' value='Primeiro' />
+              		<input type='button' class='btn button-previous' name='anterior' value='Anterior' />
+              	</div>
+              </div>
+            </div>
+            <div class="tab-pane" id="tab3">
+              <div class="jumbotron">
+                <div id="app">
+                  <div class="sidebar">
+                    <section class="cameras">
+                      <h2>Cameras</h2>
+                      <ul>
+                        <li v-if="cameras.length === 0" class="empty">Nenhuma camera encontrada.</li>
+                        <li v-for="camera in cameras">
+                          <span v-if="camera.id == activeCameraId" :title="formatName(camera.name)" class="active">{{ formatName(camera.name) }}</span>
+                          <span v-if="camera.id != activeCameraId" :title="formatName(camera.name)">
+                            <a @click.stop="selectCamera(camera)">{{ formatName(camera.name) }}</a>
+                          </span>
+                        </li>
+                      </ul>
+                    </section>
+                    <section class="scans">
+                      <h2>Scans</h2>
+                      <ul v-if="scans.length === 0">
+                        <li class="empty">Nenhuma camera ainda.</li>
+                      </ul>
+                      <transition-group name="scans" tag="ul">
+                        <li v-for="scan in scans" :key="scan.date" :title="scan.content">{{ scan.content }}</li>
+                      </transition-group>
+                    </section>
+                  </div>
+                  <center>
+                    <button type="button" style="margin-bottom:2%;" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModalcamera" id="modalcamera" disabled>
+                      Visualizar Leitor
+                    </button>
+                  </center>
+                	<div style="float:right">
+                		<input type='button' class='btn button-next' name='proximo' value='Próximo' />
+                		<input type='button' class='btn button-last' name='ultimo' value='Último' />
+                	</div>
+                	<div style="float:left">
+                		<input type='button' class='btn button-first' name='primeiro' value='Primeiro' />
+                		<input type='button' class='btn button-previous' name='anterior' value='Anterior' />
+                	</div>      
+                </div>
+              </div>
+            </div>
+					</div>
+				</div>
+			</section>
+    </div>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap-wizard/1.2/jquery.bootstrap.wizard.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
+    <script>
+    	$(document).ready(function() {
+    	  	$('#rootwizard').bootstrapWizard({'nextSelector': '.button-next', 'previousSelector': '.button-previous', 'firstSelector': '.button-first', 'lastSelector': '.button-last'});
+    		window.prettyPrint && prettyPrint()
+    	});
+
+    		function createQrCode(){
+    			var userInput = document.getElementById('valor').value;
+
+    			var qrcode = new QRCode("qrcode", {
+    				text: userInput,
+        			width: 126,
+        			height: 126,
+        			colorDark : "#000000",
+        			colorLight : "#ffffff",
+        			correctLevel : QRCode.CorrectLevel.H
+    			})
+    		}
+
+
+      var app = new Vue({
+        el: '#app',
+        data: {
+          scanner: null,
+          activeCameraId: null,
+          cameras: [],
+          scans: []
+        },
+        mounted: function () {
+          var self = this;
+          self.scanner = new Instascan.Scanner({ video: document.getElementById('preview'), scanPeriod: 5 });
+          self.scanner.addListener('scan', function (content, image) {
+            				alert('Escaneou o conteudo: ' + content);
+      				window.open(content);
+          });
+          Instascan.Camera.getCameras().then(function (cameras) {
+            self.cameras = cameras;
+            if (cameras.length > 0) {
+              self.activeCameraId = cameras[1].id;
+              self.scanner.start(cameras[1]);
+            } else {
+              console.error('Nenhuma camera encontrada.');
+            }
+          }).catch(function (e) {
+            console.error(e);
+          });
+        },
+        methods: {
+          formatName: function (name) {      
+            return name || '(Caso não tenha iniciado, Clique Aqui para ativar a camera!)';
+          },
+          selectCamera: function (camera) {
+            document.getElementById("modalcamera").click();
+            document.getElementById("modalcamera").disabled = false;
+            this.activeCameraId = camera.id;
+            this.scanner.start(camera);
+          }
+        }
+      });		
+    </script>
+    <footer style="background:#428bca;">
+      <div class="container">
+        <center><p style="color:white;">Copyleft © Wil 2019</p></center>
+      </div>
+    </footer>  
+  </body>
+</html>
